@@ -68,7 +68,7 @@ export async function refreshAccessToken(): Promise<string | null> {
     try {
       const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' },
         body: JSON.stringify({ refreshToken }),
       });
       const json = await res.json().catch(() => null);
@@ -101,7 +101,11 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
   const { method = 'GET', body, skipAuth = false } = options;
 
   const doFetch = async (token: string | null): Promise<Response> => {
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      // ngrok's free tier serves an HTML interstitial (no CORS headers) to browser GETs without this.
+      'ngrok-skip-browser-warning': '1',
+    };
     if (token) headers.Authorization = `Bearer ${token}`;
     return fetch(`${API_BASE_URL}${path}`, {
       method,

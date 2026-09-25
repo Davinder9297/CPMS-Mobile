@@ -14,7 +14,9 @@ export interface FileAttachment {
 
 async function authHeader(): Promise<Record<string, string>> {
   const token = await getAccessToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return token
+    ? { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' }
+    : { 'ngrok-skip-browser-warning': '1' };
 }
 
 // On web, the picked file's `uri` is a blob:/data: URL. `fetch`-ing it yields
