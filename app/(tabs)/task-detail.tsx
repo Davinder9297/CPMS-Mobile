@@ -24,7 +24,11 @@ import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
 import type { Task, TaskAttachment } from '@/constants/tasks';
 import * as performanceApi from '@/services/performance/performanceApi';
 import type { PerformanceTask } from '@/services/performance/performanceApi';
-import { mapTaskToDisplay, formatDisplayDate } from '@/services/performance/taskMapping';
+import {
+  mapTaskToDisplay,
+  formatDisplayDate,
+  THREE_SIXTY_TASK_TYPE_ID,
+} from '@/services/performance/taskMapping';
 import { ApiError } from '@/services/api/client';
 
 function DetailRow({ label, value }: { label: string; value: string }) {
@@ -57,7 +61,21 @@ export default function TaskDetailScreen() {
   const [downloadingFile, setDownloadingFile] = useState<string | null>(null);
   const [downloadedFiles, setDownloadedFiles] = useState<Set<string>>(new Set());
 
+  const is360Task = taskTypeId === THREE_SIXTY_TASK_TYPE_ID;
+
+  // 360 feedback tasks are handled by the Give 360 Feedback screen, so a link
+  // or notification that lands here is forwarded there.
+  useEffect(() => {
+    if (is360Task && taskId) {
+      router.replace({
+        pathname: '/(tabs)/feedback-360-provide',
+        params: { id: taskId, from: 'my-tasks' },
+      });
+    }
+  }, [is360Task, taskId, router]);
+
   const loadTask = useCallback(async () => {
+    if (is360Task) return;
     if (!taskId || !taskTypeId || !taskOwnerUserId) {
       setNotFound(true);
       return;
@@ -73,7 +91,7 @@ export default function TaskDetailScreen() {
     } catch (err) {
       setNotFound(!(err instanceof ApiError) || err.status === 404);
     }
-  }, [taskId, taskTypeId, taskOwnerUserId]);
+  }, [is360Task, taskId, taskTypeId, taskOwnerUserId]);
 
   useEffect(() => {
     let active = true;

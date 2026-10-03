@@ -1,6 +1,10 @@
 import type { Task, TaskSection } from '@/constants/tasks';
 import type { PerformanceTask } from '@/services/performance/performanceApi';
 
+// TaskTypeId of 360 feedback requests. These open the Give 360 Feedback screen
+// instead of the generic task detail screen.
+export const THREE_SIXTY_TASK_TYPE_ID = '360_FEEDBACK';
+
 // '::' rather than '_' — TaskTypeId values like 'PIP_REVIEW_SCH' already
 // contain underscores, so a '_'-joined id can't be split back apart reliably.
 const ID_DELIMITER = '::';

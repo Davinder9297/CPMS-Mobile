@@ -60,7 +60,7 @@ function StarRating({
 
 export default function Provide360FeedbackScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, from } = useLocalSearchParams<{ id: string; from?: string }>();
   const { handleSidebarItem } = useSidebarNavigation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(true);
@@ -133,6 +133,19 @@ export default function Provide360FeedbackScreen() {
     setSubmitError(null);
   };
 
+  // Back/after-submit target: My Tasks when opened from there, otherwise the
+  // Give 360 Feedback list.
+  const leave = () => {
+    if (from === 'my-tasks') {
+      router.replace('/(tabs)/my-tasks');
+      return;
+    }
+    router.replace({
+      pathname: '/(tabs)/feedback-360',
+      params: { mode: 'give' },
+    });
+  };
+
   const confirmSubmit = async () => {
     setConfirmVisible(false);
     if (!detail || !canSubmit) return;
@@ -151,10 +164,7 @@ export default function Provide360FeedbackScreen() {
         comments: comments[member.staffId] ?? '',
       }));
       await threeSixtyApi.submitGive360(detail.taskId, payload, commentPayload);
-      router.replace({
-        pathname: '/(tabs)/feedback-360',
-        params: { mode: 'give' },
-      });
+      leave();
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Failed to submit feedback');
     } finally {
@@ -176,12 +186,7 @@ export default function Provide360FeedbackScreen() {
         <View style={styles.content}>
           <Pressable
             style={styles.backButton}
-            onPress={() =>
-              router.replace({
-                pathname: '/(tabs)/feedback-360',
-                params: { mode: 'give' },
-              })
-            }
+            onPress={leave}
           >
             <View style={styles.backIconBox}>
               <Ionicons name="chevron-back" size={18} color="#6B7280" />

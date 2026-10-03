@@ -19,7 +19,11 @@ import { usePullToRefresh } from '@/hooks';
 import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
 import { TASK_SECTIONS, type Task, type TaskSection } from '@/constants/tasks';
 import * as performanceApi from '@/services/performance/performanceApi';
-import { mapTaskToDisplay, parseTaskId } from '@/services/performance/taskMapping';
+import {
+  mapTaskToDisplay,
+  parseTaskId,
+  THREE_SIXTY_TASK_TYPE_ID,
+} from '@/services/performance/taskMapping';
 
 type TaskFilter = 'all' | TaskSection;
 
@@ -97,6 +101,14 @@ export default function MyTasksScreen() {
   const navigateToTask = (id: string) => {
     const key = parseTaskId(id);
     if (!key) return;
+    // 360 feedback tasks go straight to the screen where the feedback is given.
+    if (key.taskTypeId === THREE_SIXTY_TASK_TYPE_ID) {
+      router.push({
+        pathname: '/(tabs)/feedback-360-provide',
+        params: { id: key.taskId, from: 'my-tasks' },
+      });
+      return;
+    }
     router.push({
       pathname: '/(tabs)/task-detail',
       params: { taskId: key.taskId, taskTypeId: key.taskTypeId, taskOwnerUserId: key.taskOwnerUserId },
