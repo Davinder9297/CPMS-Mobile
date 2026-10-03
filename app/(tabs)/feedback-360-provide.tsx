@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
   Pressable,
   TextInput,
+  ActivityIndicator,
   StyleSheet,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -14,33 +15,42 @@ import ConfirmModal from '@/components/ConfirmModal';
 import Sidebar from '@/components/Sidebar';
 import SmoothScrollView from '@/components/SmoothScrollView';
 import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
-import {
-  getGiveFeedbackById,
-  type GiveFeedbackCrewMember,
-} from '@/constants/feedback360';
+import * as threeSixtyApi from '@/services/crew/threeSixtyApi';
+import type { Give360Detail } from '@/services/crew/threeSixtyApi';
+
+function formatDate(isoDate: string | null): string {
+  if (!isoDate) return '—';
+  const d = new Date(isoDate);
+  if (Number.isNaN(d.getTime())) return '—';
+  return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+}
+
+const ratingKey = (staffId: string, kpiId: string) => `${staffId}::${kpiId}`;
 
 function StarRating({
   value,
-  editable = false,
+  options,
+  editable,
   onChange,
 }: {
   value: number;
-  editable?: boolean;
-  onChange?: (rating: number) => void;
+  options: number[];
+  editable: boolean;
+  onChange: (rating: number) => void;
 }) {
   return (
     <View style={styles.starRow}>
-      {[1, 2, 3, 4, 5].map((star) => (
+      {options.map((option) => (
         <Pressable
-          key={star}
+          key={option}
           disabled={!editable}
-          onPress={() => onChange?.(star)}
+          onPress={() => onChange(option)}
           hitSlop={4}
         >
           <Ionicons
-            name={star <= value ? 'star' : 'star-outline'}
+            name={option <= value ? 'star' : 'star-outline'}
             size={22}
-            color={star <= value ? '#5B8C3E' : '#9CA3AF'}
+            color={option <= value ? '#5B8C3E' : '#9CA3AF'}
           />
         </Pressable>
       ))}
@@ -54,65 +64,102 @@ export default function Provide360FeedbackScreen() {
   const { handleSidebarItem } = useSidebarNavigation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(true);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [expandedCrew, setExpandedCrew] = useState<Record<string, boolean>>({});
-  const [crewData, setCrewData] = useState<GiveFeedbackCrewMember[]>([]);
+  const [detail, setDetail] = useState<Give360Detail | null>(null);
+  const [ratings, setRatings] = useState<Record<string, number>>({});
+  const [comments, setComments] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const item = useMemo(
-    () => getGiveFeedbackById(id ?? 'give-1') ?? getGiveFeedbackById('give-1')!,
-    [id]
-  );
+  const load = useCallback(async () => {
+    if (!id) return;
+    setIsLoading(true);
+    try {
+      const res = await threeSixtyApi.getGive360Task(id);
+      setDetail(res);
+      const existing: Record<string, number> = {};
+      for (const member of res.crew) {
+        for (const kpi of member.kpis) {
+          if (kpi.rating !== null) existing[ratingKey(member.staffId, kpi.id)] = kpi.rating;
+        }
+      }
+      setRatings(existing);
+      setComments(Object.fromEntries(res.crew.map((m) => [m.staffId, m.comments])));
+      setLoadError(null);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Failed to load feedback');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id]);
 
   useEffect(() => {
-    setCrewData(
-      item.crew.map((member) => ({
-        ...member,
-        ratings: [...member.ratings],
-      }))
-    );
-    setEditingId(null);
-  }, [item]);
+    load();
+  }, [load]);
 
-  const isExpanded = (crewId: string) => expandedCrew[crewId] !== false;
+  const isSubmitted = detail?.status === 'submitted';
+  const scaleOptions = useMemo(() => detail?.scale.map((s) => s.rating) ?? [], [detail]);
 
-  const toggleCrew = (crewId: string) => {
+  // Every KPI of every crew member must be rated before Submit is enabled.
+  // (The server enforces the same rule.)
+  const { totalKpis, ratedKpis } = useMemo(() => {
+    let total = 0;
+    let rated = 0;
+    for (const member of detail?.crew ?? []) {
+      for (const kpi of member.kpis) {
+        total += 1;
+        if (ratings[ratingKey(member.staffId, kpi.id)] !== undefined) rated += 1;
+      }
+    }
+    return { totalKpis: total, ratedKpis: rated };
+  }, [detail, ratings]);
+
+  const canSubmit = !isSubmitted && !isSubmitting && totalKpis > 0 && ratedKpis === totalKpis;
+
+  const isExpanded = (staffId: string) => expandedCrew[staffId] !== false;
+
+  const toggleCrew = (staffId: string) => {
     setExpandedCrew((prev) => ({
       ...prev,
-      [crewId]: !(prev[crewId] !== false),
+      [staffId]: !(prev[staffId] !== false),
     }));
   };
 
-  const updateRating = (crewId: string, kpiIndex: number, rating: number) => {
-    setCrewData((prev) =>
-      prev.map((member) => {
-        if (member.id !== crewId) return member;
-        const ratings = [...member.ratings];
-        ratings[kpiIndex] = rating;
-        return { ...member, ratings };
-      })
-    );
+  const updateRating = (staffId: string, kpiId: string, rating: number) => {
+    setRatings((prev) => ({ ...prev, [ratingKey(staffId, kpiId)]: rating }));
+    setSubmitError(null);
   };
 
-  const updateComments = (crewId: string, comments: string) => {
-    setCrewData((prev) =>
-      prev.map((member) =>
-        member.id === crewId ? { ...member, comments } : member
-      )
-    );
-  };
-
-  const handleSavePress = () => {
-    setConfirmVisible(true);
-  };
-
-  const confirmSave = () => {
+  const confirmSubmit = async () => {
     setConfirmVisible(false);
-    setEditingId(null);
-    router.replace({
-      pathname: '/(tabs)/feedback-360',
-      params: { mode: 'give' },
-    });
+    if (!detail || !canSubmit) return;
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      const payload = detail.crew.flatMap((member) =>
+        member.kpis.map((kpi) => ({
+          staffId: member.staffId,
+          kpiId: kpi.id,
+          rating: ratings[ratingKey(member.staffId, kpi.id)],
+        }))
+      );
+      const commentPayload = detail.crew.map((member) => ({
+        staffId: member.staffId,
+        comments: comments[member.staffId] ?? '',
+      }));
+      await threeSixtyApi.submitGive360(detail.taskId, payload, commentPayload);
+      router.replace({
+        pathname: '/(tabs)/feedback-360',
+        params: { mode: 'give' },
+      });
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to submit feedback');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -129,7 +176,12 @@ export default function Provide360FeedbackScreen() {
         <View style={styles.content}>
           <Pressable
             style={styles.backButton}
-            onPress={() => router.back()}
+            onPress={() =>
+              router.replace({
+                pathname: '/(tabs)/feedback-360',
+                params: { mode: 'give' },
+              })
+            }
           >
             <View style={styles.backIconBox}>
               <Ionicons name="chevron-back" size={18} color="#6B7280" />
@@ -139,149 +191,168 @@ export default function Provide360FeedbackScreen() {
 
           <Text style={styles.title}>Provide 360 Feedback</Text>
 
-          <View style={styles.summaryCard}>
-            <Pressable
-              style={styles.summaryHeader}
-              onPress={() => setSummaryExpanded((prev) => !prev)}
-            >
-              <Text style={styles.summaryTitle}>{item.code}</Text>
-              <Ionicons
-                name={summaryExpanded ? 'chevron-up' : 'chevron-down'}
-                size={18}
-                color="#6B7280"
-              />
-            </Pressable>
+          {isLoading && <ActivityIndicator style={styles.loading} color="#2C5271" />}
+          {loadError && <Text style={styles.errorText}>{loadError}</Text>}
 
-            {summaryExpanded && (
-              <>
-                <View style={styles.summaryMetaRow}>
-                  <View style={styles.summaryMetaCol}>
-                    <Text style={styles.summaryMetaText}>
-                      Date: {item.dated}
-                    </Text>
-                  </View>
-                  <View style={styles.summaryMetaCol}>
-                    <Text style={styles.summaryMetaText}>
-                      Original Destination: {item.destination}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.statusBadge}>
-                  <Text style={styles.statusBadgeText}>
-                    {item.status}.
-                  </Text>
-                </View>
-              </>
-            )}
-          </View>
-
-          {crewData.map((member) => {
-            const editing = editingId === member.id;
-            const expanded = isExpanded(member.id);
-
-            return (
-              <View key={member.id} style={styles.crewCard}>
+          {detail && (
+            <>
+              <View style={styles.summaryCard}>
                 <Pressable
-                  style={styles.crewHeader}
-                  onPress={() => toggleCrew(member.id)}
+                  style={styles.summaryHeader}
+                  onPress={() => setSummaryExpanded((prev) => !prev)}
                 >
-                  <Text style={styles.crewName}>
-                    {member.name} - {member.grade}
-                  </Text>
-                  {!editing && (
-                    <Pressable
-                      style={styles.editButton}
-                      onPress={(e) => {
-                        e.stopPropagation?.();
-                        setEditingId(member.id);
-                        setExpandedCrew((prev) => ({
-                          ...prev,
-                          [member.id]: true,
-                        }));
-                      }}
-                      hitSlop={8}
-                    >
-                      <Text style={styles.editButtonText}>Edit</Text>
-                    </Pressable>
-                  )}
+                  <Text style={styles.summaryTitle}>{detail.code}</Text>
                   <Ionicons
-                    name={expanded ? 'chevron-up' : 'chevron-down'}
+                    name={summaryExpanded ? 'chevron-up' : 'chevron-down'}
                     size={18}
                     color="#6B7280"
                   />
                 </Pressable>
 
-                {expanded && (
-                  <View style={styles.crewBody}>
-                    {[0, 1, 2, 3].map((kpiIndex) => (
-                      <View
-                        key={`${member.id}-kpi-${kpiIndex}`}
-                        style={styles.kpiRow}
-                      >
-                        <Text style={styles.kpiLabel}>
-                          KPI {kpiIndex + 1}
+                {summaryExpanded && (
+                  <>
+                    <Text style={[styles.summaryMetaText, styles.summaryTaskId]}>
+                      Task ID: {detail.taskId}
+                    </Text>
+                    <View style={styles.summaryMetaRow}>
+                      <View style={styles.summaryMetaCol}>
+                        <Text style={styles.summaryMetaText}>
+                          Date: {formatDate(detail.dated)}
                         </Text>
-                        <StarRating
-                          value={member.ratings[kpiIndex] ?? 0}
-                          editable={editing}
-                          onChange={(rating) =>
-                            updateRating(member.id, kpiIndex, rating)
-                          }
-                        />
                       </View>
-                    ))}
-
-                    <Text style={styles.commentsLabel}>Comments:</Text>
-                    {editing ? (
-                      <TextInput
-                        style={styles.commentsInput}
-                        multiline
-                        textAlignVertical="top"
-                        value={
-                          member.comments === 'N/A' ? '' : member.comments
-                        }
-                        onChangeText={(text) =>
-                          updateComments(member.id, text)
-                        }
-                        placeholder="Type your comments"
-                        placeholderTextColor="#9CA3AF"
-                      />
-                    ) : (
-                      <Text style={styles.commentsText}>
-                        {member.comments}
+                      <View style={styles.summaryMetaCol}>
+                        <Text style={styles.summaryMetaText}>
+                          Route: {detail.route || '—'}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.statusBadge}>
+                      <Text style={styles.statusBadgeText}>
+                        {detail.status}.
                       </Text>
-                    )}
+                    </View>
+                  </>
+                )}
+              </View>
 
-                    {editing && (
-                      <View style={styles.editActions}>
-                        <Pressable
-                          style={styles.cancelButton}
-                          onPress={() => setEditingId(null)}
+              {detail.crew.map((member) => {
+                const expanded = isExpanded(member.staffId);
+                const memberRated = member.kpis.filter(
+                  (k) => ratings[ratingKey(member.staffId, k.id)] !== undefined
+                ).length;
+
+                return (
+                  <View key={member.staffId} style={styles.crewCard}>
+                    <Pressable
+                      style={styles.crewHeader}
+                      onPress={() => toggleCrew(member.staffId)}
+                    >
+                      <Text style={styles.crewName}>
+                        {member.name} - {member.grade}
+                      </Text>
+                      {member.kpis.length > 0 && (
+                        <Text
+                          style={[
+                            styles.progressText,
+                            memberRated === member.kpis.length && styles.progressTextDone,
+                          ]}
                         >
-                          <Text style={styles.cancelButtonText}>Cancel</Text>
-                        </Pressable>
-                        <Pressable
-                          style={styles.saveButton}
-                          onPress={handleSavePress}
-                        >
-                          <Text style={styles.saveButtonText}>Save</Text>
-                        </Pressable>
+                          {memberRated}/{member.kpis.length}
+                        </Text>
+                      )}
+                      <Ionicons
+                        name={expanded ? 'chevron-up' : 'chevron-down'}
+                        size={18}
+                        color="#6B7280"
+                      />
+                    </Pressable>
+
+                    {expanded && (
+                      <View style={styles.crewBody}>
+                        {member.kpis.length === 0 && (
+                          <Text style={styles.mutedText}>
+                            No KPIs are set up for grade {member.grade || '—'}.
+                          </Text>
+                        )}
+                        {member.kpis.map((kpi) => {
+                          const value = ratings[ratingKey(member.staffId, kpi.id)];
+                          return (
+                            <View
+                              key={`${member.staffId}-kpi-${kpi.id}`}
+                              style={styles.kpiRow}
+                            >
+                              <Text style={styles.kpiLabel}>{kpi.name}</Text>
+                              <StarRating
+                                value={value ?? 0}
+                                options={scaleOptions}
+                                editable={!isSubmitted && !isSubmitting}
+                                onChange={(rating) =>
+                                  updateRating(member.staffId, kpi.id, rating)
+                                }
+                              />
+                            </View>
+                          );
+                        })}
+
+                        <Text style={styles.commentsLabel}>Comments:</Text>
+                        {isSubmitted ? (
+                          <Text style={styles.commentsText}>
+                            {comments[member.staffId] || 'N/A'}
+                          </Text>
+                        ) : (
+                          <TextInput
+                            style={styles.commentsInput}
+                            multiline
+                            textAlignVertical="top"
+                            maxLength={2000}
+                            editable={!isSubmitting}
+                            value={comments[member.staffId] ?? ''}
+                            onChangeText={(text) =>
+                              setComments((prev) => ({ ...prev, [member.staffId]: text }))
+                            }
+                            placeholder="Type your comments (optional)"
+                            placeholderTextColor="#9CA3AF"
+                          />
+                        )}
                       </View>
                     )}
                   </View>
-                )}
-              </View>
-            );
-          })}
+                );
+              })}
+
+              {!isSubmitted && (
+                <>
+                  <Text style={styles.progressSummary}>
+                    {ratedKpis} of {totalKpis} KPIs rated
+                    {canSubmit ? '' : ' - rate every KPI for every crew member to submit'}
+                  </Text>
+                  {submitError && <Text style={styles.errorText}>{submitError}</Text>}
+                  <Pressable
+                    style={[styles.submitButton, !canSubmit && styles.submitButtonDisabled]}
+                    disabled={!canSubmit}
+                    onPress={() => setConfirmVisible(true)}
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: !canSubmit }}
+                  >
+                    {isSubmitting ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.submitButtonText}>Submit</Text>
+                    )}
+                  </Pressable>
+                </>
+              )}
+            </>
+          )}
         </View>
       </SmoothScrollView>
 
       <ConfirmModal
         visible={confirmVisible}
-        title="Are you sure you want to save and submit the feedback?"
-        confirmLabel="Yes, Save"
+        title="Are you sure you want to submit the feedback? It cannot be changed afterwards."
+        confirmLabel="Yes, Submit"
         cancelLabel="No, Cancel"
-        onConfirm={confirmSave}
+        onConfirm={confirmSubmit}
         onCancel={() => setConfirmVisible(false)}
       />
 
@@ -362,6 +433,9 @@ const styles = StyleSheet.create({
   summaryMetaCol: {
     flex: 1,
   },
+  summaryTaskId: {
+    marginBottom: 8,
+  },
   summaryMetaText: {
     fontSize: 14,
     color: '#4B5563',
@@ -399,14 +473,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#111827',
   },
-  editButton: {
-    marginRight: 12,
-  },
-  editButtonText: {
-    fontSize: 14,
-    color: '#2563EB',
-    textDecorationLine: 'underline',
-  },
   crewBody: {
     paddingHorizontal: 16,
     paddingBottom: 16,
@@ -421,9 +487,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   kpiLabel: {
+    flex: 1,
     fontSize: 14,
     color: '#374151',
-    width: 64,
+    paddingRight: 12,
   },
   starRow: {
     flexDirection: 'row',
@@ -433,6 +500,7 @@ const styles = StyleSheet.create({
   commentsLabel: {
     fontSize: 14,
     color: '#6B7280',
+    marginTop: 4,
     marginBottom: 8,
   },
   commentsInput: {
@@ -444,40 +512,50 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1F2937',
     minHeight: 80,
-    marginBottom: 12,
   },
   commentsText: {
     fontSize: 14,
     color: '#4B5563',
     lineHeight: 20,
-    marginBottom: 4,
   },
-  editActions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 12,
+  loading: {
+    marginVertical: 24,
   },
-  cancelButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#5B8C3E',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
+  errorText: {
+    fontSize: 14,
+    color: '#B91C1C',
+    marginBottom: 12,
   },
-  cancelButtonText: {
+  mutedText: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  progressText: {
+    fontSize: 13,
+    color: '#B45309',
+    marginRight: 12,
+  },
+  progressTextDone: {
     color: '#5B8C3E',
-    fontWeight: '600',
   },
-  saveButton: {
-    flex: 1,
+  progressSummary: {
+    fontSize: 14,
+    color: '#4B5563',
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  submitButton: {
     backgroundColor: '#5B8C3E',
     borderRadius: 8,
-    paddingVertical: 12,
+    paddingVertical: 14,
     alignItems: 'center',
   },
-  saveButtonText: {
+  submitButtonDisabled: {
+    opacity: 0.4,
+  },
+  submitButtonText: {
     color: '#fff',
     fontWeight: '600',
+    fontSize: 16,
   },
 });
