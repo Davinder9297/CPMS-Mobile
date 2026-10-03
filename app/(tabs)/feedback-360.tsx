@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   Pressable,
+  ScrollView,
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import AppHeader from '@/components/AppHeader';
@@ -17,12 +18,10 @@ import Sidebar from '@/components/Sidebar';
 import TrendChart from '@/components/TrendChart';
 import { usePullToRefresh } from '@/hooks';
 import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
-import {
-  MOCK_GIVE_FEEDBACK,
-  type GiveFeedbackStatus,
-} from '@/constants/feedback360';
+import type { GiveFeedbackStatus } from '@/constants/feedback360';
 import * as threeSixtyApi from '@/services/crew/threeSixtyApi';
 import type {
+  Give360Task,
   MyThreeSixty,
   ThreeSixtyFlight,
   ThreeSixtyFlightCategory,
@@ -184,7 +183,12 @@ export default function Feedback360Screen() {
   const [graphFilter, setGraphFilter] = useState<GraphFilter>('all');
   const [graphFilterOpen, setGraphFilterOpen] = useState(false);
   const [giveStatus, setGiveStatus] = useState<GiveFeedbackStatus>('pending');
-  const [giveYear] = useState('2026');
+  const [giveYear, setGiveYear] = useState(String(new Date().getFullYear()));
+  const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
+  const yearOptions = useMemo(() => {
+    const current = new Date().getFullYear();
+    return Array.from({ length: 21 }, (_, i) => String(current + 5 - i));
+  }, []);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -198,10 +202,16 @@ export default function Feedback360Screen() {
     }
   }, [modeParam]);
 
+  const [giveTasks, setGiveTasks] = useState<Give360Task[]>([]);
+
   const loadThreeSixty = useCallback(async () => {
     try {
-      const res = await threeSixtyApi.getMyThreeSixty();
+      const [res, tasks] = await Promise.all([
+        threeSixtyApi.getMyThreeSixty(),
+        threeSixtyApi.getGive360Tasks(),
+      ]);
       setData(res);
+      setGiveTasks(tasks);
       setLoadError(null);
     } catch (err) {
       console.error('[getMyThreeSixty]', err);
@@ -221,6 +231,20 @@ export default function Feedback360Screen() {
     };
   }, [loadThreeSixty]);
 
+  // Reload whenever the screen regains focus (e.g. after saving feedback on the
+  // provide screen), so the Give list reflects the new status without a manual
+  // pull-to-refresh. The first focus is skipped - the mount effect above loads.
+  const hasFocusedOnce = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasFocusedOnce.current) {
+        hasFocusedOnce.current = true;
+        return;
+      }
+      loadThreeSixty();
+    }, [loadThreeSixty])
+  );
+
   const { refreshing, onRefresh } = usePullToRefresh(loadThreeSixty);
 
   const filteredFlights = useMemo<ThreeSixtyFlight[]>(() => {
@@ -236,16 +260,21 @@ export default function Feedback360Screen() {
 
   const giveFeedbackList = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return MOCK_GIVE_FEEDBACK.filter((item) => {
+    return giveTasks.filter((item) => {
       const matchesStatus = item.status === giveStatus;
       const matchesQuery =
         !q ||
         item.code.toLowerCase().includes(q) ||
-        item.dated.includes(q) ||
-        (item.submittedOn?.includes(q) ?? false);
-      return matchesStatus && matchesQuery;
+        item.route.toLowerCase().includes(q) ||
+        formatDate(item.dated).includes(q) ||
+        formatDate(item.submittedOn).includes(q);
+      const itemDate = item.status === 'pending' ? item.dated : item.submittedOn;
+      const itemYear = itemDate ? new Date(itemDate).getFullYear() : null;
+      const matchesYear =
+        itemYear === null || Number.isNaN(itemYear) || String(itemYear) === giveYear;
+      return matchesStatus && matchesQuery && matchesYear;
     });
-  }, [query, giveStatus]);
+  }, [query, giveStatus, giveYear, giveTasks]);
 
   const currentFlight =
     filteredFlights[Math.min(flightIndex, filteredFlights.length - 1)];
@@ -666,7 +695,10 @@ export default function Feedback360Screen() {
                 <View style={styles.statusDropdownWrapper}>
                   <Pressable
                     style={styles.dropdownButton}
-                    onPress={() => setStatusDropdownOpen((prev) => !prev)}
+                    onPress={() => {
+                      setStatusDropdownOpen((prev) => !prev);
+                      setYearDropdownOpen(false);
+                    }}
                   >
                     <Text style={styles.dropdownButtonTextFlex}>
                       {giveStatus}
@@ -698,15 +730,44 @@ export default function Feedback360Screen() {
                   )}
                 </View>
 
-                <Pressable style={styles.yearButton}>
-                  <Text style={styles.yearButtonText}>{giveYear}</Text>
-                  <Ionicons name="chevron-down" size={14} color="#4B5563" />
-                </Pressable>
+                <View style={styles.statusDropdownWrapper}>
+                  <Pressable
+                    style={styles.yearButton}
+                    onPress={() => {
+                      setYearDropdownOpen((prev) => !prev);
+                      setStatusDropdownOpen(false);
+                    }}
+                  >
+                    <Text style={styles.yearButtonText}>{giveYear}</Text>
+                    <Ionicons name="chevron-down" size={14} color="#4B5563" />
+                  </Pressable>
+                  {yearDropdownOpen && (
+                    <View style={[styles.statusDropdownMenu, { minWidth: 90, maxHeight: 240 }]}>
+                      <ScrollView nestedScrollEnabled>
+                        {yearOptions.map((year) => (
+                          <Pressable
+                            key={year}
+                            style={({ pressed }) => [
+                              styles.dropdownItem,
+                              pressed && styles.dropdownItemPressed,
+                            ]}
+                            onPress={() => {
+                              setGiveYear(year);
+                              setYearDropdownOpen(false);
+                            }}
+                          >
+                            <Text style={styles.dropdownItemText}>{year}</Text>
+                          </Pressable>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  )}
+                </View>
               </View>
 
               {giveFeedbackList.map((item) => (
                 <Pressable
-                  key={item.id}
+                  key={item.taskId}
                   style={({ pressed }) => [
                     styles.feedbackCard,
                     pressed && styles.feedbackCardPressed,
@@ -714,7 +775,7 @@ export default function Feedback360Screen() {
                   onPress={() =>
                     router.push({
                       pathname: '/(tabs)/feedback-360-provide',
-                      params: { id: item.id },
+                      params: { id: item.taskId },
                     })
                   }
                 >
@@ -729,10 +790,11 @@ export default function Feedback360Screen() {
                     >
                       {item.code}
                     </Text>
+                    <Text style={styles.feedbackMeta}>Task ID: {item.taskId}</Text>
                     <Text style={styles.feedbackMeta}>
                       {item.status === 'pending'
-                        ? `Dated: ${item.dated}`
-                        : `Submitted On: ${item.submittedOn}`}
+                        ? `Dated: ${formatDate(item.dated)}`
+                        : `Submitted On: ${formatDate(item.submittedOn)}`}
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
