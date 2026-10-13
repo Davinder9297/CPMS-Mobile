@@ -20,6 +20,8 @@ import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
 import type { DisciplinaryFilter } from '@/constants/disciplinary';
 import * as disciplinaryApi from '@/services/crew/disciplinaryApi';
 import type { CrewDisciplinary } from '@/services/crew/disciplinaryApi';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
+import RichTextView from '@/components/RichTextView';
 
 const STATUS_FILTERS: { id: DisciplinaryFilter; label: string }[] = [
   { id: 'all', label: 'Showing All' },
@@ -255,9 +257,7 @@ export default function DisciplinaryScreen() {
                 {isOpen && (
                   <View style={styles.cardBody}>
                     <Text style={styles.fieldLabel}>Description:</Text>
-                    <Text style={styles.descriptionText}>
-                      {item.description}
-                    </Text>
+                    <RichTextView html={item.description} style={styles.descriptionText} />
 
                     <View style={styles.divider} />
 
@@ -409,8 +409,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -451,8 +451,8 @@ const styles = StyleSheet.create({
   dropdownButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -472,8 +472,8 @@ const styles = StyleSheet.create({
     left: 0,
     minWidth: 90,
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     overflow: 'hidden',
     zIndex: 20,
@@ -484,8 +484,8 @@ const styles = StyleSheet.create({
     left: 0,
     minWidth: 140,
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     overflow: 'hidden',
     zIndex: 20,
@@ -493,8 +493,8 @@ const styles = StyleSheet.create({
   dropdownItem: {
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomWidth: BORDER_WIDTH,
+    borderBottomColor: BORDER_COLOR,
   },
   dropdownItemPressed: {
     backgroundColor: '#F9FAFB',
@@ -505,8 +505,8 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 12,
     marginBottom: 12,
     overflow: 'hidden',
@@ -530,8 +530,8 @@ const styles = StyleSheet.create({
   cardBody: {
     paddingHorizontal: 16,
     paddingBottom: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopWidth: BORDER_WIDTH,
+    borderTopColor: BORDER_COLOR,
     paddingTop: 12,
   },
   fieldLabel: {
@@ -614,8 +614,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 12,
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     borderColor: '#2C5271',
     borderRadius: 8,
     paddingVertical: 10,

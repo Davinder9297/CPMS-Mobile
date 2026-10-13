@@ -8,6 +8,7 @@ import Sidebar from '@/components/Sidebar';
 import { useAppSelector } from '@/hooks';
 import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
 import { NAV_SECTIONS, type NavItem } from '@/constants/navigation';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 const ALL_NAV_ITEMS: NavItem[] = NAV_SECTIONS.flatMap(
   (section) => section.items
@@ -121,8 +122,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -136,8 +137,8 @@ const styles = StyleSheet.create({
   resultsContainer: {
     marginTop: 4,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingVertical: 4,
     shadowColor: '#000',
@@ -166,8 +167,8 @@ const styles = StyleSheet.create({
   staffCard: {
     marginTop: 24,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 12,
     padding: 16,
   },

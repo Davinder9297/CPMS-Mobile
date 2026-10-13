@@ -9,6 +9,10 @@ export type BmiAttachment = FileAttachment;
 export interface CrewBmiReading {
   seq: number;
   bmi: string;
+  // Measured height (m) / weight (kg) the BMI was derived from; null on legacy
+  // readings that were entered as a bare BMI.
+  heightMts: string | null;
+  weightKg: string | null;
   // Raw ISO reading date (or null) — formatted for display on screen.
   date: string | null;
   status: BmiRagStatus;
@@ -28,6 +32,29 @@ export interface CrewBmiView {
 // BMI view for the logged-in staff member, resolved from their JWT.
 export function getMyBmi(): Promise<CrewBmiView> {
   return apiRequest<CrewBmiView>('/crew/my-bmi');
+}
+
+// One row of the BMI reference weight table (MSTR_BMI_REFDATA). Numeric columns
+// can arrive as strings (Prisma Decimal), so they are parsed where displayed.
+export interface BmiReferenceRow {
+  Seq_Id: number;
+  Crew_Sex: string;
+  Height_mtrs: number | string;
+  Wt_lower_tolerance: number | string;
+  Min_wt_KG: number | string;
+  Max_wt_KG: number | string;
+  Wt_Upper_tolerance: number | string;
+}
+
+export interface BmiReference {
+  // 'M' | 'F' for the logged-in crew member; null when no gender is on file.
+  gender: string | null;
+  rows: BmiReferenceRow[];
+}
+
+// Reference table for the logged-in staff member, resolved from their JWT.
+export function getMyBmiReference(): Promise<BmiReference> {
+  return apiRequest<BmiReference>('/crew/my-bmi-reference');
 }
 
 // Downloads a BMI reading attachment — the /crew/bmi/files/:fileName endpoint is

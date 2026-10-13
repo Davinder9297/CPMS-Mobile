@@ -24,6 +24,7 @@ import {
   parseTaskId,
   THREE_SIXTY_TASK_TYPE_ID,
 } from '@/services/performance/taskMapping';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 type TaskFilter = 'all' | TaskSection;
 
@@ -308,8 +309,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -332,8 +333,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     minWidth: 140,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 9,
@@ -353,8 +354,8 @@ const styles = StyleSheet.create({
     minWidth: 190,
     overflow: 'hidden',
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 10,
     elevation: 8,
     shadowColor: '#000000',

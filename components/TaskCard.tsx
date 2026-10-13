@@ -2,6 +2,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import type { Task, TaskStatus } from '@/constants/tasks';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 const STATUS_STYLES: Record<
   TaskStatus,
@@ -99,8 +100,8 @@ export default function TaskCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
   acknowledgeButton: {
     marginTop: 12,
     alignSelf: 'flex-start',
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     borderColor: '#5B8C3E',
     borderRadius: 8,
     paddingHorizontal: 16,

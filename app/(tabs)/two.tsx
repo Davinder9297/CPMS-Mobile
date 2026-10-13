@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useAppDispatch, useAppSelector } from '@/hooks';
 import { setThemeMode } from '@/store/slices/appSlice';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 export default function SettingsScreen() {
   const dispatch = useAppDispatch();
@@ -239,11 +240,11 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   settingItemBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomWidth: BORDER_WIDTH,
+    borderBottomColor: BORDER_COLOR,
   },
   settingItemBorderDark: {
-    borderBottomWidth: 1,
+    borderBottomWidth: BORDER_WIDTH,
     borderBottomColor: '#374151',
   },
   settingItemPressed: {
@@ -262,7 +263,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     borderColor: '#FCA5A5',
   },
   signOutButtonDark: {

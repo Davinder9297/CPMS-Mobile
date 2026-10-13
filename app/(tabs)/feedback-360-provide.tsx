@@ -17,6 +17,7 @@ import SmoothScrollView from '@/components/SmoothScrollView';
 import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
 import * as threeSixtyApi from '@/services/crew/threeSixtyApi';
 import type { Give360Detail } from '@/services/crew/threeSixtyApi';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 function formatDate(isoDate: string | null): string {
   if (!isoDate) return '—';
@@ -413,7 +414,7 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     backgroundColor: '#EFF6FF',
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     borderColor: '#BFDBFE',
     borderRadius: 12,
     paddingHorizontal: 16,
@@ -460,8 +461,8 @@ const styles = StyleSheet.create({
   },
   crewCard: {
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 12,
     marginBottom: 12,
     overflow: 'hidden',
@@ -481,8 +482,8 @@ const styles = StyleSheet.create({
   crewBody: {
     paddingHorizontal: 16,
     paddingBottom: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopWidth: BORDER_WIDTH,
+    borderTopColor: BORDER_COLOR,
     paddingTop: 12,
   },
   kpiRow: {
@@ -509,8 +510,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   commentsInput: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,

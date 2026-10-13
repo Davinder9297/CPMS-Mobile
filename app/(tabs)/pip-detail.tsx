@@ -22,6 +22,7 @@ import { usePullToRefresh } from '@/hooks';
 import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
 import * as pipApi from '@/services/crew/pipApi';
 import type { CrewPip, CrewPipObjective, CrewPipReviewTask, PipAttachment } from '@/services/crew/pipApi';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 type PipTab = 'details' | 'objectives' | 'reviews';
 
@@ -502,7 +503,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 4,
     borderRadius: 8,
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     alignItems: 'center',
   },
   tabActive: {
@@ -511,7 +512,7 @@ const styles = StyleSheet.create({
   },
   tabInactive: {
     backgroundColor: '#F3F4F6',
-    borderColor: '#D1D5DB',
+    borderColor: BORDER_COLOR,
   },
   tabText: {
     fontSize: 13,
@@ -526,8 +527,8 @@ const styles = StyleSheet.create({
   detailsCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     padding: 16,
   },
   detailsHeading: {
@@ -543,8 +544,8 @@ const styles = StyleSheet.create({
   },
   fieldBox: {
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -577,8 +578,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F9FAFB',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -611,8 +612,8 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   editInput: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -628,7 +629,7 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     borderColor: '#5B8C3E',
     borderRadius: 8,
     paddingVertical: 10,
@@ -666,8 +667,8 @@ const styles = StyleSheet.create({
   },
   reviewRow: {
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 12,

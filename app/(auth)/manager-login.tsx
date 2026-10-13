@@ -19,6 +19,7 @@ import SmoothScrollView from '@/components/SmoothScrollView';
 import { setPmAuth } from '@/store/slices/authSlice';
 import { setTokens } from '@/services/api/client';
 import * as authApi from '@/services/auth/authApi';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 const PERFORMANCE_MANAGER_ROLE_ID = 'PERFORMANCE_MANAGER';
 
@@ -168,7 +169,12 @@ export default function ManagerLoginScreen() {
           >
             <View style={styles.webFormInner}>
               <View style={styles.webLogoHeader}>
-                <Text style={styles.logo}>LOGO</Text>
+                <Image
+                  source={require('../../assets/images/logo.png')}
+                  style={styles.logo}
+                  resizeMode="contain"
+                  accessibilityLabel="SalamAir"
+                />
               </View>
               {titleBlock}
               {formBlock}
@@ -187,7 +193,12 @@ export default function ManagerLoginScreen() {
     >
       <SmoothScrollView style={styles.scrollView} bounces={false}>
         <View style={styles.header}>
-          <Text style={styles.logo}>LOGO</Text>
+          <Image
+            source={require('../../assets/images/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+            accessibilityLabel="SalamAir"
+          />
         </View>
         <View style={styles.divider} />
 
@@ -247,17 +258,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   webLogoHeader: {
+    alignItems: 'center',
     paddingBottom: 8,
   },
   header: {
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 56,
     paddingBottom: 12,
   },
   logo: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1E40AF',
+    width: 160,
+    height: 30,
   },
   divider: {
     height: 3,
@@ -304,8 +316,8 @@ const styles = StyleSheet.create({
     color: '#1F2937',
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 14,

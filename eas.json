@@ -15,12 +15,19 @@
       }
     },
     "production": {
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://salamair.mycrew360.ai/api/v1"
+      },
       "android": {
         "buildType": "apk"
       }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascAppId": "6818985536"
+      }
+    }
   }
 }

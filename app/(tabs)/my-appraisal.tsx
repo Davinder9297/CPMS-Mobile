@@ -27,6 +27,9 @@ import type {
   CrewAppraisal,
   AppraisalAttachment,
 } from '@/services/crew/appraisalApi';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
+import RichTextView from '@/components/RichTextView';
+import { htmlToPlainText, plainTextToHtml } from '@/utils/richText';
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEAR_OPTIONS = [0, 1, 2, 3].map((offset) => String(CURRENT_YEAR - offset));
@@ -367,7 +370,7 @@ export default function MyAppraisalScreen() {
   };
 
   const startEditObjective = () => {
-    setObjectiveDraft(displayObjective?.OBJ_CREW_COMMENTS ?? '');
+    setObjectiveDraft(htmlToPlainText(displayObjective?.OBJ_CREW_COMMENTS));
     setObjectiveError(null);
     setEditingObjective(true);
   };
@@ -377,7 +380,11 @@ export default function MyAppraisalScreen() {
     setIsSavingObjective(true);
     setObjectiveError(null);
     try {
-      const updated = await appraisalApi.updateMyAppraisalObjective(displayObjective.AppraisalId, objectiveDraft);
+      // Unchanged text keeps the original HTML (and its formatting); edited text is saved as
+      // paragraph HTML so the web app, which renders these comments as rich text, shows it right.
+      const original = displayObjective.OBJ_CREW_COMMENTS ?? '';
+      const comment = objectiveDraft === htmlToPlainText(original) ? original : plainTextToHtml(objectiveDraft);
+      const updated = await appraisalApi.updateMyAppraisalObjective(displayObjective.AppraisalId, comment);
       setObjectives((prev) => prev.map((o) => (o.AppraisalId === updated.AppraisalId ? updated : o)));
       setEditingObjective(false);
     } catch (err) {
@@ -564,12 +571,12 @@ export default function MyAppraisalScreen() {
                           </View>
                         </View>
                       ) : (
-                        <Text style={styles.bodyText}>{displayObjective?.OBJ_CREW_COMMENTS || 'No comments yet.'}</Text>
+                        <RichTextView html={displayObjective?.OBJ_CREW_COMMENTS} style={styles.bodyText} emptyText="No comments yet." />
                       )}
                     </AppraisalAccordion>
 
                     <AppraisalAccordion title="Appraiser Comments" expanded onToggle={() => {}}>
-                      <Text style={styles.bodyText}>{displayObjective?.OBJ_PM_COMMENTS || 'No comments yet.'}</Text>
+                      <RichTextView html={displayObjective?.OBJ_PM_COMMENTS} style={styles.bodyText} emptyText="No comments yet." />
                     </AppraisalAccordion>
 
                     <View style={styles.navButtons}>
@@ -707,8 +714,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -731,7 +738,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 6,
     borderRadius: 8,
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -741,7 +748,7 @@ const styles = StyleSheet.create({
   },
   tabInactive: {
     backgroundColor: '#F3F4F6',
-    borderColor: '#D1D5DB',
+    borderColor: BORDER_COLOR,
   },
   tabText: {
     fontSize: 13,
@@ -763,8 +770,8 @@ const styles = StyleSheet.create({
   yearButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -781,8 +788,8 @@ const styles = StyleSheet.create({
     left: 0,
     minWidth: 120,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 10,
     overflow: 'hidden',
     elevation: 8,
@@ -839,8 +846,8 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   commentInput: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -856,8 +863,8 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingVertical: 8,
     alignItems: 'center',
@@ -884,7 +891,7 @@ const styles = StyleSheet.create({
   },
   prevButton: {
     flex: 1,
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     borderColor: '#5B8C3E',
     borderRadius: 8,
     paddingVertical: 14,
@@ -924,8 +931,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     marginTop: 12,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -948,8 +955,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#F9FAFB',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,

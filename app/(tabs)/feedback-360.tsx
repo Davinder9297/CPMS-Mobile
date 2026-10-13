@@ -27,6 +27,7 @@ import type {
   ThreeSixtyFlightCategory,
   ThreeSixtyTrendCategory,
 } from '@/services/crew/threeSixtyApi';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 type Mode = 'view' | 'give';
 type SubView = 'flight' | 'trend';
@@ -853,8 +854,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -897,7 +898,7 @@ const styles = StyleSheet.create({
     borderColor: '#2563EB',
   },
   radioOuterDefault: {
-    borderColor: '#9CA3AF',
+    borderColor: BORDER_COLOR,
   },
   radioInner: {
     width: 10,
@@ -926,7 +927,7 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     paddingHorizontal: 16,
     borderRadius: 8,
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     alignItems: 'center',
   },
   tabActive: {
@@ -935,7 +936,7 @@ const styles = StyleSheet.create({
   },
   tabInactive: {
     backgroundColor: '#F3F4F6',
-    borderColor: '#D1D5DB',
+    borderColor: BORDER_COLOR,
   },
   tabText: {
     fontSize: 14,
@@ -972,8 +973,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
-    borderWidth: 1,
-    borderColor: '#9CA3AF',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -998,8 +999,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     minWidth: 240,
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     marginBottom: 16,
     overflow: 'hidden',
@@ -1009,8 +1010,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomWidth: BORDER_WIDTH,
+    borderBottomColor: BORDER_COLOR,
   },
   flightDropdownItemSelected: {
     backgroundColor: '#EFF6FF',
@@ -1033,7 +1034,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     borderColor: '#F87171',
     backgroundColor: '#FEF2F2',
     borderRadius: 12,
@@ -1081,8 +1082,8 @@ const styles = StyleSheet.create({
   },
   categoryCard: {
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 12,
     marginBottom: 12,
     overflow: 'hidden',
@@ -1104,7 +1105,7 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   avgBadge: {
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     borderColor: '#3B82F6',
     borderRadius: 4,
     paddingHorizontal: 8,
@@ -1119,8 +1120,8 @@ const styles = StyleSheet.create({
   categoryBody: {
     paddingHorizontal: 16,
     paddingBottom: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopWidth: BORDER_WIDTH,
+    borderTopColor: BORDER_COLOR,
   },
   levelRow: {
     flexDirection: 'row',
@@ -1156,7 +1157,7 @@ const styles = StyleSheet.create({
   },
   prevButton: {
     flex: 1,
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     borderColor: '#5B8C3E',
     borderRadius: 8,
     paddingVertical: 14,
@@ -1189,8 +1190,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -1200,8 +1201,8 @@ const styles = StyleSheet.create({
   periodButtonInline: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -1220,7 +1221,7 @@ const styles = StyleSheet.create({
   },
   overallCard: {
     backgroundColor: '#EFF6FF',
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     borderColor: '#93C5FD',
     borderRadius: 12,
     paddingHorizontal: 12,
@@ -1241,7 +1242,7 @@ const styles = StyleSheet.create({
   },
   ratingBoxRed: {
     flex: 1,
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     borderColor: '#EF4444',
     borderRadius: 10,
     paddingHorizontal: 10,
@@ -1250,7 +1251,7 @@ const styles = StyleSheet.create({
   },
   ratingBoxGreen: {
     flex: 1,
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     borderColor: '#22C55E',
     borderRadius: 10,
     paddingHorizontal: 10,
@@ -1316,8 +1317,8 @@ const styles = StyleSheet.create({
     width: 210,
     overflow: 'hidden',
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     elevation: 8,
     shadowColor: '#000000',
@@ -1382,8 +1383,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     minWidth: 108,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -1403,8 +1404,8 @@ const styles = StyleSheet.create({
     minWidth: 140,
     zIndex: 10,
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     overflow: 'hidden',
     elevation: 6,
@@ -1416,8 +1417,8 @@ const styles = StyleSheet.create({
   dropdownItem: {
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomWidth: BORDER_WIDTH,
+    borderBottomColor: BORDER_COLOR,
   },
   dropdownItemPressed: {
     backgroundColor: '#F9FAFB',
@@ -1430,8 +1431,8 @@ const styles = StyleSheet.create({
   yearButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -1444,8 +1445,8 @@ const styles = StyleSheet.create({
   },
   feedbackCard: {
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,

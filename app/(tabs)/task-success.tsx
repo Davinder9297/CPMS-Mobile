@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AppHeader from '@/components/AppHeader';
 import Sidebar from '@/components/Sidebar';
 import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
+import { BORDER_WIDTH } from '@/constants/Borders';
 
 export default function TaskSuccessScreen() {
   const router = useRouter();
@@ -76,7 +77,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     marginTop: 40,
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     borderColor: '#5B8C3E',
     borderRadius: 8,
     paddingHorizontal: 24,

@@ -23,6 +23,7 @@ import type {
   CrewDisciplinaryDetail,
   DisciplinaryAttachment,
 } from '@/services/crew/disciplinaryApi';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 function formatDate(isoDate: string | null): string {
   if (!isoDate) return '—';
@@ -387,8 +388,8 @@ const styles = StyleSheet.create({
   detailsCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     padding: 16,
     marginBottom: 16,
   },
@@ -405,8 +406,8 @@ const styles = StyleSheet.create({
   },
   fieldBox: {
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -439,8 +440,8 @@ const styles = StyleSheet.create({
     width: 96,
   },
   opsCodeBox: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     height: 52,
     alignItems: 'center',
@@ -461,8 +462,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F9FAFB',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -490,10 +491,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#E5E7EB',
+    borderLeftWidth: BORDER_WIDTH,
+    borderRightWidth: BORDER_WIDTH,
+    borderBottomWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
   },
   crewCell: {
     fontSize: 14,
@@ -509,8 +510,8 @@ const styles = StyleSheet.create({
     width: 70,
   },
   outcomeBox: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingVertical: 20,
     alignItems: 'center',
@@ -521,8 +522,8 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   outcomeCard: {
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 10,
     padding: 12,
     marginBottom: 10,

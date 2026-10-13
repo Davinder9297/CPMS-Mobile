@@ -18,6 +18,7 @@ import { usePullToRefresh } from '@/hooks';
 import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
 import * as pipApi from '@/services/crew/pipApi';
 import type { CrewPip } from '@/services/crew/pipApi';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 type PipStatusFilter = 'open' | 'closed';
 
@@ -212,8 +213,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -248,7 +249,7 @@ const styles = StyleSheet.create({
     borderColor: '#2563EB',
   },
   radioOuterDefault: {
-    borderColor: '#9CA3AF',
+    borderColor: BORDER_COLOR,
   },
   radioInner: {
     width: 10,
@@ -282,8 +283,8 @@ const styles = StyleSheet.create({
   },
   pipCard: {
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,

@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, StyleSheet, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useAppDispatch, useAppSelector } from '@/hooks';
 import { saveAuthSession } from '@/services/auth/session';
 import { setStaffSession } from '@/store/slices/authSlice';
 import * as authApi from '@/services/auth/authApi';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 export default function LoginBehalfScreen() {
   const router = useRouter();
@@ -64,7 +65,12 @@ export default function LoginBehalfScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.logo}>LOGO</Text>
+        <Image
+          source={require('../../assets/images/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+          accessibilityLabel="SalamAir"
+        />
       </View>
       <View style={styles.divider} />
 
@@ -145,15 +151,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   header: {
+    alignItems: 'center',
     backgroundColor: '#fff',
     paddingHorizontal: 20,
     paddingTop: 56,
     paddingBottom: 12,
   },
   logo: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1E40AF',
+    width: 160,
+    height: 30,
   },
   divider: {
     height: 3,
@@ -173,8 +179,8 @@ const styles = StyleSheet.create({
   },
   staffCard: {
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 12,
     paddingHorizontal: 20,
     paddingVertical: 20,

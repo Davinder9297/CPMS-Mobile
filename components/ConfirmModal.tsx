@@ -1,4 +1,5 @@
 import { Modal, Pressable, Text, View, StyleSheet } from 'react-native';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 interface ConfirmModalProps {
   visible: boolean;
@@ -106,8 +107,8 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',

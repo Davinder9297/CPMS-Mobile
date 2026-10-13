@@ -19,6 +19,7 @@ import { useAppSelector, usePullToRefresh } from '@/hooks';
 import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
 import * as rewardsApi from '@/services/crew/rewardsApi';
 import type { CrewReward } from '@/services/crew/rewardsApi';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 function formatDate(isoDate: string | null): string {
   if (!isoDate) return '—';
@@ -267,8 +268,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -292,8 +293,8 @@ const styles = StyleSheet.create({
   yearButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -310,8 +311,8 @@ const styles = StyleSheet.create({
     left: 0,
     minWidth: 100,
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     overflow: 'hidden',
     zIndex: 20,
@@ -319,8 +320,8 @@ const styles = StyleSheet.create({
   yearItem: {
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomWidth: BORDER_WIDTH,
+    borderBottomColor: BORDER_COLOR,
   },
   yearItemPressed: {
     backgroundColor: '#F9FAFB',
@@ -344,8 +345,8 @@ const styles = StyleSheet.create({
   },
   rewardCard: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#9CA3AF',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,
@@ -377,8 +378,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#9CA3AF',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,

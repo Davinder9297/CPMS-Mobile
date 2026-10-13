@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Image,
   View,
   Text,
   TextInput,
@@ -15,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import * as crewApi from '@/services/crew/crewApi';
 import type { ManagedStaffMember } from '@/services/crew/crewApi';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 function StaffDetails({ staff }: { staff: ManagedStaffMember }) {
   return (
@@ -88,7 +90,12 @@ export default function StaffSearchScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.header}>
-        <Text style={styles.logo}>LOGO</Text>
+        <Image
+          source={require('../../assets/images/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+          accessibilityLabel="SalamAir"
+        />
       </View>
       <View style={styles.divider} />
 
@@ -163,15 +170,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
   },
   header: {
+    alignItems: 'center',
     backgroundColor: '#fff',
     paddingHorizontal: 20,
     paddingTop: 56,
     paddingBottom: 12,
   },
   logo: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1E40AF',
+    width: 160,
+    height: 30,
   },
   divider: {
     height: 3,
@@ -195,8 +202,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -215,8 +222,8 @@ const styles = StyleSheet.create({
   listContainer: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     overflow: 'hidden',
   },
   separator: {

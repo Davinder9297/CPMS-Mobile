@@ -1,6 +1,8 @@
 import { Fragment, type ReactNode } from 'react';
 import { Text, type TextStyle } from 'react-native';
 
+import { decodeEntities, looksLikeHtml, stripScripts } from '@/utils/richText';
+
 // Renders the constrained HTML that Quill (the web app's RichTextEditor —
 // see CPMS/frontend/src/components/RichTextEditor.jsx's toolbar config)
 // actually produces: <p>, <h1>/<h2>, <strong>/<b>, <em>/<i>, <u>,
@@ -22,20 +24,6 @@ interface RichTextViewProps {
 type Node =
   | { type: 'text'; value: string }
   | { type: 'element'; tag: string; attrs: Record<string, string>; children: Node[] };
-
-const ENTITIES: Record<string, string> = {
-  nbsp: ' ',
-  amp: '&',
-  lt: '<',
-  gt: '>',
-  quot: '"',
-  '#39': "'",
-  apos: "'",
-};
-
-function decodeEntities(text: string): string {
-  return text.replace(/&(#?\w+);/g, (match, name) => ENTITIES[name] ?? match);
-}
 
 function parseAttrs(attrString: string): Record<string, string> {
   const attrs: Record<string, string> = {};
@@ -100,38 +88,68 @@ function parseInlineStyle(styleAttr: string | undefined): TextStyle {
   return style;
 }
 
-const BLOCK_TAGS = new Set(['p', 'div', 'h1', 'h2', 'li']);
+const BLOCK_TAGS = new Set(['p', 'div', 'h1', 'h2', 'h3', 'li']);
 
+type ElementNode = Extract<Node, { type: 'element' }>;
+
+// An empty Quill paragraph is <p><br></p>: it should render as one blank line, not two.
+const isBlankBlock = (children: Node[]) =>
+  children.length === 1 && children[0].type === 'element' && children[0].tag === 'br';
+
+// Line breaks are inserted BETWEEN blocks (never after the last one), so there is no
+// stray empty line at the bottom of the text.
 function renderNodes(nodes: Node[], keyPrefix: string): ReactNode[] {
   const out: ReactNode[] = [];
+  let afterBlock = false;
+  const breakLine = () => {
+    if (out.length > 0 && out[out.length - 1] !== '\n') out.push('\n');
+  };
+  const startInline = () => {
+    if (afterBlock) {
+      out.push('\n');
+      afterBlock = false;
+    }
+  };
 
   nodes.forEach((node, index) => {
     const key = `${keyPrefix}-${index}`;
 
     if (node.type === 'text') {
+      startInline();
       out.push(<Fragment key={key}>{node.value}</Fragment>);
       return;
     }
 
     const { tag, attrs, children } = node;
 
+    // Quill 2 puts an empty <span class="ql-ui"> marker inside list items.
+    if (tag === 'span' && /\bql-ui\b/.test(attrs.class ?? '')) return;
+
     if (tag === 'br') {
+      afterBlock = false;
       out.push('\n');
       return;
     }
 
     if (tag === 'ol' || tag === 'ul') {
-      const items = children.filter((c) => c.type === 'element' && c.tag === 'li') as Extract<Node, { type: 'element' }>[];
-      items.forEach((item, i) => {
-        const prefix = tag === 'ol' ? `${i + 1}. ` : '• ';
+      // Quill 2 stores EVERY list as <ol> and marks each <li data-list="bullet|ordered">.
+      let counter = 0;
+      children.forEach((child, i) => {
+        if (child.type !== 'element' || child.tag !== 'li') return;
+        const item = child as ElementNode;
+        const kind = item.attrs['data-list'] ?? (tag === 'ol' ? 'ordered' : 'bullet');
+        counter = kind === 'ordered' ? counter + 1 : 0;
+        const indent = Number(/ql-indent-(\d+)/.exec(item.attrs.class ?? '')?.[1] ?? 0);
+        const prefix = `${'    '.repeat(indent)}${kind === 'ordered' ? `${counter}. ` : '• '}`;
+        breakLine();
         out.push(
           <Text key={`${key}-li-${i}`}>
             {prefix}
             {renderNodes(item.children, `${key}-li-${i}`)}
-            {'\n'}
           </Text>
         );
       });
+      afterBlock = true;
       return;
     }
 
@@ -142,28 +160,44 @@ function renderNodes(nodes: Node[], keyPrefix: string): ReactNode[] {
     if (tag === 's' || tag === 'strike') childStyle.textDecorationLine = 'line-through';
     if (tag === 'h1') childStyle = { ...childStyle, fontWeight: '700', fontSize: 20 };
     if (tag === 'h2') childStyle = { ...childStyle, fontWeight: '700', fontSize: 17 };
+    if (tag === 'h3') childStyle = { ...childStyle, fontWeight: '700', fontSize: 15 };
     if (tag === 'a') childStyle = { ...childStyle, color: '#2563EB', textDecorationLine: 'underline' };
     if (tag === 'span') childStyle = { ...childStyle, ...parseInlineStyle(attrs.style) };
 
-    const rendered = (
+    if (BLOCK_TAGS.has(tag)) {
+      breakLine();
+      out.push(
+        <Text key={key} style={childStyle}>
+          {renderNodes(isBlankBlock(children) ? [] : children, key)}
+        </Text>
+      );
+      afterBlock = true;
+      return;
+    }
+
+    startInline();
+    out.push(
       <Text key={key} style={childStyle}>
         {renderNodes(children, key)}
       </Text>
     );
-
-    out.push(rendered);
-    if (BLOCK_TAGS.has(tag)) out.push('\n');
   });
 
   return out;
 }
 
 export default function RichTextView({ html, style, emptyText = '—' }: RichTextViewProps) {
-  const plain = (html ?? '').replace(/<[^>]+>/g, '').trim();
-  if (!html || !plain) {
+  const value = stripScripts(html ?? '');
+  // Values without any tag (older rows, or text typed in the app) are shown verbatim,
+  // so a plain "a < b" is never mistaken for markup.
+  if (!looksLikeHtml(value)) {
+    return <Text style={style}>{value.trim() ? value : emptyText}</Text>;
+  }
+
+  const visible = decodeEntities(value.replace(/<[^>]+>/g, '')).trim();
+  if (!visible) {
     return <Text style={style}>{emptyText}</Text>;
   }
 
-  const nodes = parseHtml(html);
-  return <Text style={style}>{renderNodes(nodes, 'root')}</Text>;
+  return <Text style={style}>{renderNodes(parseHtml(value), 'root')}</Text>;
 }

@@ -6,7 +6,9 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  Modal,
   Platform,
+  ScrollView,
   StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -19,7 +21,13 @@ import SmoothScrollView from '@/components/SmoothScrollView';
 import { usePullToRefresh } from '@/hooks';
 import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
 import * as bmiApi from '@/services/crew/bmiApi';
-import type { BmiAttachment, BmiRagStatus, CrewBmiView } from '@/services/crew/bmiApi';
+import type {
+  BmiAttachment,
+  BmiRagStatus,
+  BmiReference,
+  CrewBmiView,
+} from '@/services/crew/bmiApi';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 // Download control for a reading's attachments. Downloads every file for that
 // reading in turn; shows a spinner while running and a tick when done.
@@ -52,7 +60,9 @@ function BmiAttachmentCell({ attachments }: { attachments: BmiAttachment[] }) {
       console.error('[downloadBmiFile]', err);
       Alert.alert(
         'Download failed',
-        err instanceof Error ? err.message : 'Could not download the attachment.'
+        err instanceof Error
+          ? err.message
+          : 'Could not download the attachment.'
       );
     } finally {
       setDownloading(false);
@@ -75,7 +85,9 @@ function BmiAttachmentCell({ attachments }: { attachments: BmiAttachment[] }) {
           color={downloaded ? '#16A34A' : '#12677A'}
         />
       )}
-      {attachments.length > 1 && <Text style={styles.attachCount}>{attachments.length}</Text>}
+      {attachments.length > 1 && (
+        <Text style={styles.attachCount}>{attachments.length}</Text>
+      )}
     </Pressable>
   );
 }
@@ -112,7 +124,9 @@ export default function MyBmiScreen() {
       setLoadError(null);
     } catch (err) {
       console.error('[getMyBmi]', err);
-      setLoadError(err instanceof Error ? err.message : 'Failed to load BMI history');
+      setLoadError(
+        err instanceof Error ? err.message : 'Failed to load BMI history'
+      );
     }
   }, []);
 
@@ -130,6 +144,40 @@ export default function MyBmiScreen() {
 
   const { refreshing, onRefresh } = usePullToRefresh(loadBmi);
 
+  // Reference weight table popup (same MSTR_BMI_REFDATA table the web page
+  // shows), fetched the first time it is opened.
+  const [showReference, setShowReference] = useState(false);
+  const [reference, setReference] = useState<BmiReference | null>(null);
+  const [referenceLoading, setReferenceLoading] = useState(false);
+  const [referenceError, setReferenceError] = useState<string | null>(null);
+
+  const loadReference = useCallback(async () => {
+    setReferenceLoading(true);
+    setReferenceError(null);
+    try {
+      setReference(await bmiApi.getMyBmiReference());
+    } catch (err) {
+      console.error('[getMyBmiReference]', err);
+      setReferenceError(
+        err instanceof Error ? err.message : 'Failed to load reference table'
+      );
+    } finally {
+      setReferenceLoading(false);
+    }
+  }, []);
+
+  const openReference = () => {
+    setShowReference(true);
+    if (!reference) loadReference();
+  };
+
+  const referenceRows = useMemo(() => {
+    const rows = reference?.rows ?? [];
+    return reference?.gender
+      ? rows.filter((r) => r.Crew_Sex === reference.gender)
+      : rows;
+  }, [reference]);
+
   const filteredReadings = useMemo(() => {
     const readings = view?.readings ?? [];
     const normalizedQuery = query.trim().toLowerCase();
@@ -140,6 +188,8 @@ export default function MyBmiScreen() {
       return (
         formatDate(reading.date).includes(normalizedQuery) ||
         reading.bmi.toLowerCase().includes(normalizedQuery) ||
+        (reading.heightMts ?? '').includes(normalizedQuery) ||
+        (reading.weightKg ?? '').includes(normalizedQuery) ||
         label.includes(normalizedQuery)
       );
     });
@@ -155,7 +205,9 @@ export default function MyBmiScreen() {
       <SmoothScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<PullToRefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <PullToRefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         <View style={styles.headerSection}>
           <Text style={styles.title}>1.8 My BMI</Text>
@@ -174,16 +226,32 @@ export default function MyBmiScreen() {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.sectionTitle}>My BMI History</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>My BMI History</Text>
+            <Pressable
+              onPress={openReference}
+              accessibilityRole="button"
+              accessibilityLabel="Open BMI reference table"
+              hitSlop={8}
+            >
+              <Text style={styles.referenceLink}>Reference table</Text>
+            </Pressable>
+          </View>
 
           <View style={styles.table}>
             <View style={[styles.tableRow, styles.tableHeader]}>
-              <Text style={[styles.headerCell, styles.dateCell]}>
-                Reading Date
+              <Text style={[styles.headerCell, styles.dateCell]}>Date</Text>
+              <Text style={[styles.headerCell, styles.heightCell]}>
+                Height (m)
+              </Text>
+              <Text style={[styles.headerCell, styles.weightCell]}>
+                Weight (kg)
               </Text>
               <Text style={[styles.headerCell, styles.bmiCell]}>BMI</Text>
               <Text style={[styles.headerCell, styles.statusCell]}>Status</Text>
-              <Text style={[styles.headerCell, styles.attachmentCell]}>Attachment</Text>
+              <Text style={[styles.headerCell, styles.attachmentCell]}>
+                File
+              </Text>
             </View>
 
             {isLoading ? (
@@ -203,16 +271,32 @@ export default function MyBmiScreen() {
                       <Text style={[styles.bodyCell, styles.dateCell]}>
                         {formatDate(reading.date)}
                       </Text>
-                      <Text style={[styles.bodyCell, styles.bmiCell]}>
-                        {reading.bmi}
+                      <Text style={[styles.bodyCell, styles.heightCell]}>
+                        {reading.heightMts ?? '—'}
                       </Text>
-                      <View style={[styles.bodyCellContainer, styles.statusCell]}>
+                      <Text style={[styles.bodyCell, styles.weightCell]}>
+                        {reading.weightKg ?? '—'}
+                      </Text>
+                      <Text style={[styles.bodyCell, styles.bmiCell]}>
+                        {Number(reading.bmi).toFixed(1)}
+                      </Text>
+                      <View
+                        style={[styles.bodyCellContainer, styles.statusCell]}
+                      >
                         <View
-                          style={[styles.statusIndicator, { backgroundColor: meta.color }]}
+                          style={[
+                            styles.statusIndicator,
+                            { backgroundColor: meta.color },
+                          ]}
                           accessibilityLabel={meta.label}
                         />
                       </View>
-                      <View style={[styles.bodyCellContainer, styles.attachmentCell]}>
+                      <View
+                        style={[
+                          styles.bodyCellContainer,
+                          styles.attachmentCell,
+                        ]}
+                      >
                         <BmiAttachmentCell attachments={reading.attachments} />
                       </View>
                     </View>
@@ -232,19 +316,177 @@ export default function MyBmiScreen() {
             <View style={styles.targetColumn}>
               <Text style={styles.summaryLabel}>My BMI Target</Text>
               <View style={styles.summaryCard}>
-                <Text style={styles.summaryValue}>{view?.targetBmi || '—'}</Text>
+                <Text style={styles.summaryValue}>
+                  {view?.targetBmi || '—'}
+                </Text>
               </View>
             </View>
 
             <View style={styles.reviewColumn}>
               <Text style={styles.summaryLabel}>Next Review</Text>
               <View style={styles.summaryCard}>
-                <Text style={styles.summaryValue}>{formatDate(view?.nextReviewDate ?? null)}</Text>
+                <Text style={styles.summaryValue}>
+                  {formatDate(view?.nextReviewDate ?? null)}
+                </Text>
               </View>
             </View>
           </View>
         </View>
       </SmoothScrollView>
+
+      <Modal
+        visible={showReference}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowReference(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                BMI Reference Table
+                {reference?.gender
+                  ? ` (${reference.gender === 'M' ? 'Male' : 'Female'})`
+                  : ''}
+              </Text>
+              <Pressable
+                onPress={() => setShowReference(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Close reference table"
+                hitSlop={10}
+              >
+                <Ionicons name="close" size={24} color="#737373" />
+              </Pressable>
+            </View>
+
+            <View style={styles.legend}>
+              <View style={styles.legendItem}>
+                <View
+                  style={[
+                    styles.legendSwatch,
+                    { backgroundColor: RAG_META.green.color },
+                  ]}
+                />
+                <Text style={styles.legendText}>Green: Min – Max</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View
+                  style={[
+                    styles.legendSwatch,
+                    { backgroundColor: RAG_META.amber.color },
+                  ]}
+                />
+                <Text style={styles.legendText}>
+                  Amber: within Lower – Upper tolerance
+                </Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View
+                  style={[
+                    styles.legendSwatch,
+                    { backgroundColor: RAG_META.red.color },
+                  ]}
+                />
+                <Text style={styles.legendText}>Red: outside tolerance</Text>
+              </View>
+            </View>
+
+            <View style={[styles.refRow, styles.refHeader]}>
+              {!reference?.gender && (
+                <Text style={[styles.refHeaderCell, styles.refSexCell]}>
+                  Sex
+                </Text>
+              )}
+              <Text style={[styles.refHeaderCell, styles.refCell]}>
+                Height (m)
+              </Text>
+              <Text style={[styles.refHeaderCell, styles.refCell]}>
+                Lower Tol.
+              </Text>
+              <Text style={[styles.refHeaderCell, styles.refCell]}>Min Wt</Text>
+              <Text style={[styles.refHeaderCell, styles.refCell]}>Max Wt</Text>
+              <Text style={[styles.refHeaderCell, styles.refCell]}>
+                Upper Tol.
+              </Text>
+            </View>
+
+            {referenceLoading ? (
+              <View style={styles.emptyRow}>
+                <ActivityIndicator color="#12677A" />
+              </View>
+            ) : referenceError ? (
+              <View style={styles.emptyRow}>
+                <Text style={styles.errorText}>{referenceError}</Text>
+                <Pressable onPress={loadReference} hitSlop={8}>
+                  <Text style={styles.referenceLink}>Retry</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <ScrollView
+                style={styles.modalScroll}
+                contentContainerStyle={styles.modalScrollContent}
+                nestedScrollEnabled
+              >
+                {referenceRows.map((r) => (
+                  <View key={`${r.Crew_Sex}-${r.Seq_Id}`} style={styles.refRow}>
+                    {!reference?.gender && (
+                      <Text style={[styles.refBodyCell, styles.refSexCell]}>
+                        {r.Crew_Sex}
+                      </Text>
+                    )}
+                    <Text style={[styles.refBodyCell, styles.refCell]}>
+                      {Number(r.Height_mtrs).toFixed(2)}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.refBodyCell,
+                        styles.refCell,
+                        styles.refAmber,
+                      ]}
+                    >
+                      {r.Wt_lower_tolerance}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.refBodyCell,
+                        styles.refCell,
+                        styles.refGreen,
+                      ]}
+                    >
+                      {r.Min_wt_KG}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.refBodyCell,
+                        styles.refCell,
+                        styles.refGreen,
+                      ]}
+                    >
+                      {r.Max_wt_KG}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.refBodyCell,
+                        styles.refCell,
+                        styles.refAmber,
+                      ]}
+                    >
+                      {r.Wt_Upper_tolerance}
+                    </Text>
+                  </View>
+                ))}
+                {referenceRows.length === 0 && (
+                  <View style={styles.emptyRow}>
+                    <Text style={styles.emptyText}>
+                      No reference data available
+                    </Text>
+                  </View>
+                )}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
 
       <Sidebar
         visible={sidebarOpen}
@@ -284,8 +526,8 @@ const styles = StyleSheet.create({
     minHeight: 50,
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#D7D7D7',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 16,
     backgroundColor: '#FFFFFF',
@@ -301,23 +543,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 24,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
   sectionTitle: {
     color: '#12677A',
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 20,
+  },
+  referenceLink: {
+    color: '#2563EB',
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
   table: {
-    borderWidth: 1,
-    borderColor: '#D0D0D0',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     backgroundColor: '#FFFFFF',
   },
   tableRow: {
     minHeight: 32,
     flexDirection: 'row',
     alignItems: 'stretch',
-    borderBottomWidth: 1,
-    borderBottomColor: '#D0D0D0',
+    borderBottomWidth: BORDER_WIDTH,
+    borderBottomColor: BORDER_COLOR,
   },
   tableHeader: {
     minHeight: 40,
@@ -325,17 +577,17 @@ const styles = StyleSheet.create({
   },
   headerCell: {
     justifyContent: 'center',
-    paddingHorizontal: 5,
+    paddingHorizontal: 4,
     paddingVertical: 9,
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '500',
   },
   bodyCell: {
-    paddingHorizontal: 5,
+    paddingHorizontal: 4,
     paddingVertical: 6,
     color: '#666666',
-    fontSize: 15,
+    fontSize: 14,
   },
   bodyCellContainer: {
     justifyContent: 'center',
@@ -343,22 +595,32 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   dateCell: {
-    flex: 1.3,
-    borderRightWidth: 1,
-    borderRightColor: '#D0D0D0',
+    flex: 1.25,
+    borderRightWidth: BORDER_WIDTH,
+    borderRightColor: BORDER_COLOR,
+  },
+  heightCell: {
+    flex: 0.85,
+    borderRightWidth: BORDER_WIDTH,
+    borderRightColor: BORDER_COLOR,
+  },
+  weightCell: {
+    flex: 0.9,
+    borderRightWidth: BORDER_WIDTH,
+    borderRightColor: BORDER_COLOR,
   },
   bmiCell: {
-    flex: 0.75,
-    borderRightWidth: 1,
-    borderRightColor: '#D0D0D0',
+    flex: 0.65,
+    borderRightWidth: BORDER_WIDTH,
+    borderRightColor: BORDER_COLOR,
   },
   statusCell: {
-    flex: 0.75,
-    borderRightWidth: 1,
-    borderRightColor: '#D0D0D0',
+    flex: 0.7,
+    borderRightWidth: BORDER_WIDTH,
+    borderRightColor: BORDER_COLOR,
   },
   attachmentCell: {
-    flex: 1.1,
+    flex: 0.55,
   },
   statusIndicator: {
     width: 20,
@@ -410,7 +672,7 @@ const styles = StyleSheet.create({
   summaryCard: {
     minHeight: 88,
     justifyContent: 'center',
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     borderColor: '#555555',
     borderRadius: 10,
     paddingHorizontal: 14,
@@ -420,5 +682,95 @@ const styles = StyleSheet.create({
     color: '#111111',
     fontSize: 28,
     fontWeight: '700',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 560,
+    maxHeight: '90%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: BORDER_WIDTH,
+    borderBottomColor: BORDER_COLOR,
+  },
+  modalTitle: {
+    flex: 1,
+    color: '#151515',
+    fontSize: 16,
+    fontWeight: '700',
+    marginRight: 12,
+  },
+  legend: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 6,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  legendSwatch: {
+    width: 12,
+    height: 12,
+    borderRadius: 2,
+  },
+  legendText: {
+    color: '#555555',
+    fontSize: 12,
+  },
+  modalScroll: {
+    flexGrow: 0,
+  },
+  modalScrollContent: {
+    paddingBottom: 16,
+  },
+  refRow: {
+    flexDirection: 'row',
+    borderBottomWidth: BORDER_WIDTH,
+    borderBottomColor: BORDER_COLOR,
+  },
+  refHeader: {
+    backgroundColor: '#12677A',
+    borderBottomWidth: 0,
+  },
+  refCell: {
+    flex: 1,
+  },
+  refSexCell: {
+    width: 44,
+  },
+  refHeaderCell: {
+    paddingHorizontal: 8,
+    paddingVertical: 9,
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  refBodyCell: {
+    paddingHorizontal: 8,
+    paddingVertical: 7,
+    color: '#444444',
+    fontSize: 14,
+  },
+  refGreen: {
+    backgroundColor: '#DCFCE7',
+  },
+  refAmber: {
+    backgroundColor: '#FEF3C7',
   },
 });

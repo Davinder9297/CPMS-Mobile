@@ -28,6 +28,7 @@ import * as crewApi from '@/services/crew/crewApi';
 import type { StaffProfile } from '@/services/crew/crewApi';
 import * as authApi from '@/services/auth/authApi';
 import type { LineManager } from '@/services/auth/authApi';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 function formatDate(isoDate: string): string {
   const d = new Date(isoDate);
@@ -309,8 +310,8 @@ const styles = StyleSheet.create({
   },
   fieldInput: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -335,8 +336,8 @@ const styles = StyleSheet.create({
   },
   managerCard: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,
@@ -379,7 +380,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   logoutButton: {
-    borderWidth: 1,
+    borderWidth: BORDER_WIDTH,
     borderColor: '#EF4444',
     borderRadius: 8,
     paddingVertical: 16,

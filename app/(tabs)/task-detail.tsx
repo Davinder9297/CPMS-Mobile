@@ -30,6 +30,8 @@ import {
   THREE_SIXTY_TASK_TYPE_ID,
 } from '@/services/performance/taskMapping';
 import { ApiError } from '@/services/api/client';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
+import RichTextView from '@/components/RichTextView';
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
@@ -256,7 +258,7 @@ export default function TaskDetailScreen() {
                 {rawTask.Description && (
                   <View style={styles.detailDescription}>
                     <Text style={styles.detailLabel}>Description</Text>
-                    <Text style={styles.detailDescriptionText}>{rawTask.Description}</Text>
+                    <RichTextView html={rawTask.Description} style={styles.detailDescriptionText} />
                   </View>
                 )}
               </View>
@@ -416,8 +418,8 @@ const styles = StyleSheet.create({
   },
   detailsCard: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,
@@ -433,8 +435,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomWidth: BORDER_WIDTH,
+    borderBottomColor: BORDER_COLOR,
   },
   detailLabel: {
     fontSize: 13,
@@ -472,8 +474,8 @@ const styles = StyleSheet.create({
   },
   responseInput: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -486,8 +488,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     marginTop: 12,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -513,8 +515,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#F9FAFB',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,

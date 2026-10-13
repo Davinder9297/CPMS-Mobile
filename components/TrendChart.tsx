@@ -2,6 +2,7 @@ import { View, Text, useWindowDimensions, StyleSheet } from 'react-native';
 import Svg, { Line, Polyline, Circle, Text as SvgText } from 'react-native-svg';
 
 import { TREND_MONTHS, TREND_SERIES } from '@/constants/feedback360';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 interface TrendSeries {
   id: string;
@@ -140,8 +141,8 @@ export default function TrendChart({ selectedSeriesId, months, series }: TrendCh
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 12,
     padding: 12,
   },

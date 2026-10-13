@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { BORDER_COLOR, BORDER_WIDTH } from '@/constants/Borders';
 
 interface AppraisalAccordionProps {
   title: string;
@@ -55,8 +56,8 @@ export default function AppraisalAccordion({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderWidth: BORDER_WIDTH,
+    borderColor: BORDER_COLOR,
     borderRadius: 12,
     marginBottom: 12,
     overflow: 'hidden',
@@ -87,8 +88,8 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingBottom: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopWidth: BORDER_WIDTH,
+    borderTopColor: BORDER_COLOR,
   },
   contentInner: {
     paddingTop: 12,
